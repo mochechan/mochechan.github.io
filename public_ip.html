@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>my public ip list</title>
+</head>
+<script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.8.0.js"></script>
+
+<script>
+
+var hosts = {};
+
+function myFunction() {
+  var input, filter, table, tr, td, i;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+
+function updateHost(d){
+	//console.log(d);
+	if(d.timestamp){
+		d.updated = new Date(d.timestamp).toLocaleString();
+	}
+	if(hosts[d.hostname]){
+		if(d.timestamp > hosts[[d.hostname].timestamp]){
+			hosts[d.hostname] = d;
+		}
+	}else{
+		hosts[d.hostname] = d;
+	}
+}
+
+
+function parseHistory(data){
+	var items = [];
+	for(var i in data){
+		var c;
+		try{
+			c = JSON.parse(data[i]);
+		}catch(e){
+			c = data[i];
+		}
+		items.push(c);
+		if(c.hostname && c.ifaces && c.timestamp){
+			updateHost({hostname: c.hostname, ifaces: c.ifaces, timestamp: c.timestamp});
+		}
+	}
+
+	//return items;
+	return hosts;
+}
+
+function prettyPrint() {
+	fetch("http://pubsub.pubnub.com/v2/history/sub-key/sub-c-64fada00-1c48-11e7-b284-02ee2ddab7fe/channel/my_public_ip_list", {
+		method: "get",
+	}).then((response)=>{
+		return response.json();
+	}).then((data)=>{
+		console.log("in data");
+		console.log(data[0]);
+    //var obj = JSON.parse(data);
+    var pretty = JSON.stringify(parseHistory(data[0]), undefined, 2);
+    document.getElementById('myTextArea').value = pretty;
+	});
+}
+prettyPrint();
+
+</script>
+<body>
+Hello World
+
+<h1>This is a Heading</h1>
+<p>This is a paragraph.</p>
+<a href="http://pubsub.pubnub.com/v2/history/sub-key/sub-c-64fada00-1c48-11e7-b284-02ee2ddab7fe/channel/my_public_ip_list">public ip list</a><br/>
+
+<table id="myTable">
+  <tr class="header">
+    <th>hostname</th>
+    <th>iface</th>
+    <th>latest update</th>
+  </tr>
+  <tr>
+    <td>Alfreds Futterkiste</td>
+    <td>Germany</td>
+  </tr>
+  <tr>
+    <td>Berglunds snabbkop</td>
+    <td>Sweden</td>
+  </tr>
+  <tr>
+    <td>Island Trading</td>
+    <td>UK</td>
+  </tr>
+</table>
+
+
+<button onclick="prettyPrint()">Pretty Print</button><br/>
+<textarea id="myTextArea" cols=99 rows=100></textarea>
+
+</body>
+</html>
