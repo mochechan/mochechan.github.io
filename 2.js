@@ -1,4 +1,5 @@
 var http = require('http');
+var util = require('util');
 
 
 			http.get({
@@ -21,7 +22,7 @@ var http = require('http');
 						var x;
 						try{
 							x = JSON.parse(parsed[i]);
-							if(x.hostname != "rpi2") console.log(x);
+							//if(x.hostname != "rpi2") console.log(x);
 							if(typeof x.hostname != "string") continue;
 							if(latest[x.hostname] && latest[x.hostname].timestamp){
 								if(latest[x.hostname].timestamp < x.timestamp){
@@ -35,7 +36,7 @@ var http = require('http');
 						}
 					}
 					console.log("============= latest");
-					console.log(latest);
+					console.log(util.inspect(latest, {colors: true, showHidden: false, depth: null}));
 					
   			});
 			});
